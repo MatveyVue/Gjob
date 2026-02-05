@@ -5,7 +5,7 @@ const composer = new Composer();
 
 console.log('✅ Composer loaded');
 
-const OPENROUTER_API_KEY = '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';
+const OPENROUTER_API_KEY = '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';
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const MODEL = "openai/gpt-3.5-turbo";
 
