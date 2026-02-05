@@ -3,10 +3,10 @@ const axios = require('axios');
 
 const composer = new Composer();
 
-console.log('✅ Composer loaded successfully');
+console.log('✅ Composer loaded');
 
-// Конфигурация OpenRouter
-const OPENROUTER_API_KEY = 'sk-or-v1-e6dd17da3badafdedf9d10e6ef639fbb06a674812f8b964ed93c8de01bdbb30';
+// ВАЖНО: Получите новый ключ на https://openrouter.ai/keys
+const OPENROUTER_API_KEY = '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'; // ← ЗАМЕНИТЕ НА НОВЫЙ!
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const MODEL = "openai/gpt-3.5-turbo";
 
@@ -17,7 +17,7 @@ async function callOpenRouter(prompt) {
     const headers = {
         'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
         'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://gjob.vercel.app',
+        'HTTP-Referer': 'https://gjob-ai.vercel.app',
         'X-Title': 'Gjob Telegram Bot'
     };
 
@@ -26,49 +26,66 @@ async function callOpenRouter(prompt) {
         'messages': [
             {
                 'role': 'system',
-                'content': 'Ты очень умный и полезный помощник в Telegram-боте. Отвечай кратко и по делу. Твое имя Gjob. Отвечай на русском языке если вопрос на русском, на английском если вопрос на английском.'
+                'content': 'Ты полезный помощник Gjob. Отвечай кратко и по делу.'
             },
             {
                 'role': 'user',
                 'content': prompt
             }
         ],
-        'max_tokens': 500,
+        'max_tokens': 300,
         'temperature': 0.7
     };
 
     try {
         const response = await axios.post(OPENROUTER_API_URL, payload, {
             headers: headers,
-            timeout: 10000
+            timeout: 15000
         });
 
-        if (response.status === 200 && response.data.choices && response.data.choices.length > 0) {
+        console.log('✅ OpenRouter response:', response.status);
+        
+        if (response.data.choices && response.data.choices.length > 0) {
             return response.data.choices[0].message.content.trim();
         } else {
+            console.warn('No choices in response');
             return "Извините, не удалось получить ответ.";
         }
     } catch (error) {
-        console.error('OpenRouter API Error:', error.message);
-        return "Извините, произошла ошибка.";
+        console.error('❌ OpenRouter Error:', error.response?.status, error.message);
+        
+        // Детальная информация об ошибке
+        if (error.response) {
+            console.error('Response data:', error.response.data);
+            console.error('Response headers:', error.response.headers);
+        }
+        
+        if (error.response?.status === 401) {
+            return "❌ Ошибка авторизации API. Пожалуйста, проверьте API ключ.";
+        } else if (error.response?.status === 429) {
+            return "⚠️ Слишком много запросов. Попробуйте позже.";
+        } else {
+            return "⚠️ Временные проблемы с сервисом. Попробуйте еще раз.";
+        }
     }
 }
 
 // Обработчик команды /start
 composer.start(async (ctx) => {
-    console.log('/start command received');
+    console.log('/start from:', ctx.from.username || ctx.from.id);
     
-    const photoUrl = 'https://github.com/MatveyVue/Gjob/blob/main/Gjob.png?raw=true';
-
     try {
-        await ctx.replyWithPhoto(photoUrl, {
-            caption: `🤖 *Hi! I'm Gjob, your AI assistant*\n\nI'm here to help you!`,
-            parse_mode: 'Markdown'
-        });
+        await ctx.replyWithPhoto(
+            'https://github.com/MatveyVue/Gjob/blob/main/Gjob.png?raw=true',
+            {
+                caption: `🤖 *Hi! I'm Gjob, your AI assistant!*\n\nI can help you with questions, ideas, tasks, and more!\n\nJust send me a message!`,
+                parse_mode: 'Markdown'
+            }
+        );
     } catch (error) {
-        console.error('Photo error:', error);
+        console.error('Photo error:', error.message);
         await ctx.reply(
-            `🤖 *Hi! I'm Gjob, your AI assistant*\n\nI'm here to help you!`,
+            '🤖 *Hi! I\'m Gjob, your AI assistant!*\n\nHow can I help you today?',
             { parse_mode: 'Markdown' }
         );
     }
@@ -76,28 +93,29 @@ composer.start(async (ctx) => {
 
 // Обработчик текстовых сообщений
 composer.on('text', async (ctx) => {
-    const userMessage = ctx.message.text;
-    console.log('Text message:', userMessage);
+    const text = ctx.message.text;
+    console.log('Text from', ctx.from.id, ':', text);
     
-    if (userMessage.startsWith('/')) {
-        return;
-    }
+    if (text.startsWith('/')) return;
     
     try {
         await ctx.sendChatAction('typing');
-        const response = await callOpenRouter(userMessage);
-        await ctx.reply(response, {
-            parse_mode: 'Markdown'
-        });
+        
+        // Простая проверка API ключа перед запросом
+        if (!OPENROUTER_API_KEY || OPENROUTER_API_KEY.includes('ВАШ_НОВЫЙ_API_КЛЮЧ')) {
+            await ctx.reply('⚠️ *API ключ не настроен*\n\nПожалуйста, обновите API ключ OpenRouter.', {
+                parse_mode: 'Markdown'
+            });
+            return;
+        }
+        
+        const response = await callOpenRouter(text);
+        await ctx.reply(response);
+        
     } catch (error) {
-        console.error('Error processing message:', error);
-        await ctx.reply("Извините, произошла ошибка.");
+        console.error('Processing error:', error);
+        await ctx.reply('❌ Произошла ошибка. Попробуйте еще раз.');
     }
 });
-
-// Убрал composer.catch - это вызывает ошибку
-// composer.catch((err, ctx) => {
-//     console.error(`Error in composer:`, err);
-// });
 
 module.exports = composer;
