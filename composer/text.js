@@ -16,7 +16,7 @@ async function callAI(prompt) {
                 messages: [
                     {
                         role: 'user',
-                        content: 'Ты очень умный и полезный помощник в Telegram-боте. Отвечай кратко и по делу. Твое имя Gjob.'
+                        content: prompt
                     }
                 ],
                 max_tokens: 300
