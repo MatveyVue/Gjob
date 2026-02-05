@@ -5,19 +5,17 @@ const composer = new Composer();
 
 console.log('✅ Composer loaded');
 
-// ВАЖНО: Получите новый ключ на https://openrouter.ai/keys
-const OPENROUTER_API_KEY = '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'; // ← ЗАМЕНИТЕ НА НОВЫЙ!
+const OPENROUTER_API_KEY = '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';
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const MODEL = "openai/gpt-3.5-turbo";
 
-// Функция для вызова OpenRouter API
 async function callOpenRouter(prompt) {
     console.log('🔄 Calling OpenRouter');
     
     const headers = {
         'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
         'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://gjob-ai.vercel.app',
+        'HTTP-Referer': 'https://gjob.vercel.app',
         'X-Title': 'Gjob Telegram Bot'
     };
 
@@ -54,10 +52,8 @@ async function callOpenRouter(prompt) {
     } catch (error) {
         console.error('❌ OpenRouter Error:', error.response?.status, error.message);
         
-        // Детальная информация об ошибке
         if (error.response) {
             console.error('Response data:', error.response.data);
-            console.error('Response headers:', error.response.headers);
         }
         
         if (error.response?.status === 401) {
@@ -100,14 +96,6 @@ composer.on('text', async (ctx) => {
     
     try {
         await ctx.sendChatAction('typing');
-        
-        // Простая проверка API ключа перед запросом
-        if (!OPENROUTER_API_KEY || OPENROUTER_API_KEY.includes('ВАШ_НОВЫЙ_API_КЛЮЧ')) {
-            await ctx.reply('⚠️ *API ключ не настроен*\n\nПожалуйста, обновите API ключ OpenRouter.', {
-                parse_mode: 'Markdown'
-            });
-            return;
-        }
         
         const response = await callOpenRouter(text);
         await ctx.reply(response);
