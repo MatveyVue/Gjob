@@ -1,15 +1,15 @@
+// Минимальный index.js
 const { Telegraf } = require('telegraf');
 const bot = new Telegraf('8291475798:AAHMVeNhqwhQKju8dZnYUP3x7LIAu-kldxs');
 
-// Подключаем обработчики
-bot.use(require('./composer/text.js'));
+bot.start((ctx) => ctx.reply('Hello from Vercel!'));
+bot.on('text', (ctx) => ctx.reply('You said: ' + ctx.message.text));
 
-// Экспортируем функцию для Vercel
 module.exports = async (req, res) => {
   if (req.method === 'POST') {
     await bot.handleUpdate(req.body);
-    res.status(200).send('OK');
+    res.end();
   } else {
-    res.send('Gjob Bot is running!');
+    res.send('Bot is running!');
   }
 };
