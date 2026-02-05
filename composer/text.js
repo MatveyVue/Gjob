@@ -3,131 +3,94 @@ const axios = require('axios');
 
 const composer = new Composer();
 
-console.log('✅ Composer loaded - Using xAI API');
+// Конфигурация OpenRouter
+const OPENROUTER_API_KEY = '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';
+const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
+const MODEL = "deepseek/deepseek-chat-v3-0324";
 
-// xAI API ключ
-const XAI_API_KEY = 'xai-P3l8p7HmHo800nEhxyGeJ22PS3QANiPqrGTwgaKgw8Qxodwut7GBG0UfMW2IcTWt8rOzpnblbFZtJCSu';
-const XAI_API_URL = 'https://api.x.ai/v1/chat/completions';
-
-async function callXAI(prompt) {
-    console.log('🔄 Calling xAI API with prompt:', prompt.substring(0, 50) + '...');
-    
+// Функция для вызова OpenRouter API
+async function callOpenRouter(prompt) {
     const headers = {
-        'Authorization': `Bearer ${XAI_API_KEY}`,
-        'Content-Type': 'application/json'
+        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://gjob.vercel.app',
+        'X-Title': 'Gjob Telegram Bot'
     };
 
     const payload = {
-        messages: [
+        'model': MODEL,
+        'messages': [
             {
-                role: 'system',
-                content: 'Ты очень умный и полезный помощник в Telegram-боте и тебя зовут Gjob. Всегда отвечай на вопрос о том как тебя зовут говори Gjob. Отвечай кратко и по делу.'
+                'role': 'system',
+                'content': 'Ты очень умный и полезный помощник в Telegram-боте. Отвечай кратко и по делу. Твое имя Gjob. Отвечай на русском языке если вопрос на русском, на английском если вопрос на английском.'
             },
             {
-                role: 'user',
-                content: prompt
+                'role': 'user',
+                'content': prompt
             }
         ],
-        model: 'grok-4-latest', // или 'grok-4.1-fast'
-        stream: false,
-        temperature: 0.7,
-        max_tokens: 500
+        'max_tokens': 500,
+        'temperature': 0.7
     };
 
     try {
-        console.log('📤 Sending request to xAI...');
-        const response = await axios.post(XAI_API_URL, payload, {
+        const response = await axios.post(OPENROUTER_API_URL, payload, {
             headers: headers,
             timeout: 30000
         });
 
-        console.log('✅ xAI response status:', response.status);
-        
-        if (response.data && response.data.choices && response.data.choices.length > 0) {
-            const reply = response.data.choices[0].message.content.trim();
-            console.log('📝 Response received, length:', reply.length);
-            return reply;
+        if (response.status === 200 && response.data.choices && response.data.choices.length > 0) {
+            return response.data.choices[0].message.content.trim();
         } else {
-            console.warn('No choices in response:', response.data);
-            return "Извините, не удалось получить ответ от AI.";
+            return "Извините, не удалось получить ответ. Попробуйте еще раз.";
         }
     } catch (error) {
-        console.error('❌ xAI API Error:');
-        
-        if (error.response) {
-            console.error('Status:', error.response.status);
-            console.error('Status text:', error.response.statusText);
-            console.error('Error data:', JSON.stringify(error.response.data, null, 2));
-            
-            if (error.response.status === 401) {
-                return "❌ Ошибка 401: Неверный API ключ xAI. Проверьте ключ.";
-            } else if (error.response.status === 429) {
-                return "⚠️ Слишком много запросов к xAI. Попробуйте позже.";
-            }
-        } else if (error.request) {
-            console.error('No response received:', error.message);
-            return "⚠️ Нет ответа от xAI сервера. Проверьте подключение.";
-        } else {
-            console.error('Request error:', error.message);
-        }
-        
-        return "⚠️ Временные проблемы с xAI сервисом. Попробуйте еще раз.";
+        console.error('OpenRouter API Error:', error.response?.data || error.message);
+        return "Извините, произошла ошибка при обработке запроса. Пожалуйста, попробуйте еще раз.";
     }
 }
 
 // Обработчик команды /start
 composer.start(async (ctx) => {
-    console.log('/start command from:', ctx.from.id);
-    
-    try {
-        await ctx.replyWithPhoto(
-            'https://github.com/MatveyVue/Gjob/blob/main/Gjob.png?raw=true',
-            {
-                caption: `🤖 *Hi! I\'m Gjob!*\n\n` +
-                        `Powered by xAI Grok 🤖\n\n` +
-                        `Just send me a message and I\'ll help you!`,
-                parse_mode: 'Markdown'
-            }
-        );
-    } catch (error) {
-        console.error('Photo error:', error.message);
-        await ctx.reply(
-            `🤖 *Hi! I\'m Gjob!*\n\nPowered by xAI Grok 🤖\n\nSend me a message!`,
-            { parse_mode: 'Markdown' }
-        );
-    }
+    const photoUrl = 'https://github.com/MatveyVue/Gjob/blob/main/Gjob.png?raw=true';
+
+    return ctx.replyWithPhoto(photoUrl, {
+        caption: `🤖 *Hi! I'm Gjob, your AI assistant*\n\n` +
+                `I'm here to help you with any questions or tasks.\n\n` +
+                `Just send me a message and I'll assist you!`,
+        parse_mode: 'Markdown'
+    });
 });
 
 // Обработчик текстовых сообщений
 composer.on('text', async (ctx) => {
-    const text = ctx.message.text.trim();
-    console.log('Text message from', ctx.from.id, ':', text);
+    const userMessage = ctx.message.text;
     
     // Игнорируем команды
-    if (text.startsWith('/')) return;
-    
-    // Тестовые команды
-    if (text.toLowerCase() === 'ping') {
-        return ctx.reply('🏓 Pong! xAI bot is working!');
+    if (userMessage.startsWith('/')) {
+        return;
     }
     
-    if (text.toLowerCase() === 'status') {
-        return ctx.reply('✅ Status: xAI bot is active and ready!');
-    }
-    
-    if (text.toLowerCase() === 'test') {
-        return ctx.reply('🧪 Test successful! xAI API connected.');
-    }
-    
+    // Показываем статус "печатает"
     await ctx.sendChatAction('typing');
     
     try {
-        const response = await callXAI(text);
-        await ctx.reply(response, { parse_mode: 'Markdown' });
+        // Получаем ответ от OpenRouter
+        const response = await callOpenRouter(userMessage);
+        
+        // Отправляем ответ
+        await ctx.reply(response, {
+            parse_mode: 'Markdown'
+        });
     } catch (error) {
-        console.error('Main error:', error);
-        await ctx.reply('❌ Sorry, I encountered an error. Try again.');
+        console.error('Error processing message:', error);
+        await ctx.reply("Извините, произошла ошибка. Пожалуйста, попробуйте еще раз.");
     }
+});
+
+// Обработчик ошибок
+composer.catch((err, ctx) => {
+    console.error(`Error in composer for ${ctx.updateType}:`, err);
 });
 
 module.exports = composer;
