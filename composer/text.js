@@ -15,6 +15,10 @@ async function callAI(prompt) {
                 model: 'openai/gpt-3.5-turbo',
                 messages: [
                     {
+                        role: 'system',
+                        content: 'Твое имя Gjob. Ты AI помощник в Telegram боте. Отвечай кратко. Всегда говори что тебя зовут Gjob когда спрашивают о твоем имени.'
+                    },
+                    {
                         role: 'user',
                         content: prompt
                     }
@@ -61,10 +65,21 @@ composer.on('text', async (ctx) => {
     
     // Quick responses for stability
     const lowerText = text.toLowerCase();
+    
+    // Ответы на вопросы об имени
+    if (lowerText.includes('как тебя зовут') || lowerText.includes('твое имя') || 
+        lowerText.includes('your name') || lowerText.includes('who are you')) {
+        return ctx.reply('🤖 Меня зовут Gjob!');
+    }
+    
+    if (lowerText === 'gjob' || lowerText === 'джоб') {
+        return ctx.reply('🤖 Да, это я! Gjob ваш помощник!');
+    }
+    
     if (lowerText === 'ping') return ctx.reply('🏓 Pong!');
     if (lowerText === 'test') return ctx.reply('✅ Working!');
-    if (lowerText === 'hello') return ctx.reply('👋 Hello!');
-    if (lowerText === 'hi') return ctx.reply('👋 Hi!');
+    if (lowerText === 'hello') return ctx.reply('👋 Hello! I\'m Gjob!');
+    if (lowerText === 'hi') return ctx.reply('👋 Hi! I\'m Gjob!');
     
     await ctx.sendChatAction('typing');
     
