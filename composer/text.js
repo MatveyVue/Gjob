@@ -79,9 +79,8 @@ composer.start(async (ctx) => {
         await ctx.replyWithPhoto(
             'https://github.com/MatveyVue/Gjob/blob/main/Gjob.png?raw=true',
             {
-                caption: `🤖 *Hi! I'm Gjob!*\n\n` +
-                        `Powered by AI 🤖\n\n` +
-                        `Send me any message!`,
+                caption: `🤖 *Hi! I'm Gjob, how can I help?*\n\n` +
+                        `Just send me a message and I will try to help!`,
                 parse_mode: 'Markdown'
             }
         );
