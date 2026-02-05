@@ -5,7 +5,7 @@ const composer = new Composer();
 
 // Конфигурация API
 const API_KEY = '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';
-const API_URL = 'https://openrouter.ai/api/v1/chat/completions';
+const API_URL = 'https://openrouter.ai/api/v1/completions';
 
 async function callAI(prompt) {
     const headers = {
