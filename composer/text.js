@@ -5,7 +5,7 @@ const composer = new Composer();
 
 console.log('🤖 Gjob bot loaded');
 
-const API_KEY = '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';
+const API_KEY = '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';
 
 async function callAI(prompt) {
     try {
