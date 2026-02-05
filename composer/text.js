@@ -14,7 +14,7 @@ async function callAI(prompt) {
     };
 
     const payload = {
-        'model': 'openai/gpt-oss-120b',
+        'model': 'openai/gpt-3.5-turbo',
         'messages': [
             {
                 'role': 'user',
