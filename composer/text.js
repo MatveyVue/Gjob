@@ -4,7 +4,7 @@ const axios = require('axios');
 const composer = new Composer();
 
 // Конфигурация API
-const API_KEY = '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';
+const API_KEY = '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';
 const API_URL = 'https://openrouter.ai/api/v1/completions';
 
 async function callAI(prompt) {
