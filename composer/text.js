@@ -63,8 +63,30 @@ composer.on('text', async (ctx) => {
     const text = ctx.message.text;
     if (text.startsWith('/')) return;
     
-    // Quick responses for stability
-    const lowerText = text.toLowerCase();
+    // Проверяем, является ли чат приватным (личные сообщения)
+    const isPrivateChat = ctx.chat.type === 'private';
+    
+    // Если это не приватный чат и бота не отметили - игнорируем сообщение
+    if (!isPrivateChat) {
+        // Проверяем, упомянут ли бот в сообщении
+        const botUsername = ctx.botInfo?.username || 'Gjob_bot';
+        const mentioned = text.includes(`@${botUsername}`);
+        
+        // Если бот не упомянут - игнорируем сообщение
+        if (!mentioned) {
+            return;
+        }
+        
+        // Удаляем упоминание из текста для обработки
+        const cleanText = text.replace(`@${botUsername}`, '').trim();
+        if (!cleanText) {
+            return ctx.reply('🤖 Да, это я! Gjob ваш помощник!');
+        }
+    }
+    
+    // Для приватных чатов или если бот упомянут - обрабатываем сообщение
+    const processedText = isPrivateChat ? text : text.replace(`@${ctx.botInfo?.username || 'Gjob_bot'}`, '').trim();
+    const lowerText = processedText.toLowerCase();
     
     // Ответы на вопросы об имени
     if (lowerText.includes('как тебя зовут') || lowerText.includes('твое имя') || 
@@ -84,10 +106,48 @@ composer.on('text', async (ctx) => {
     await ctx.sendChatAction('typing');
     
     try {
-        const response = await callAI(text);
+        const response = await callAI(processedText);
         await ctx.reply(response);
     } catch (error) {
         await ctx.reply('Please try again.');
+    }
+});
+
+// Обработка упоминаний в ответах на сообщения (реплаях)
+composer.on('reply_to_message', async (ctx) => {
+    const text = ctx.message.text;
+    if (text.startsWith('/')) return;
+    
+    // Проверяем, является ли ответ на сообщение бота
+    const repliedToBot = ctx.message.reply_to_message?.from?.id === ctx.botInfo.id;
+    
+    // Если это ответ на сообщение бота в группе - обрабатываем
+    if (repliedToBot) {
+        const lowerText = text.toLowerCase();
+        
+        // Ответы на вопросы об имени
+        if (lowerText.includes('как тебя зовут') || lowerText.includes('твое имя') || 
+            lowerText.includes('your name') || lowerText.includes('who are you')) {
+            return ctx.reply('🤖 Меня зовут Gjob!');
+        }
+        
+        if (lowerText === 'gjob' || lowerText === 'джоб') {
+            return ctx.reply('🤖 Да, это я! Gjob ваш помощник!');
+        }
+        
+        if (lowerText === 'ping') return ctx.reply('🏓 Pong!');
+        if (lowerText === 'test') return ctx.reply('✅ Working!');
+        if (lowerText === 'hello') return ctx.reply('👋 Hello! I\'m Gjob!');
+        if (lowerText === 'hi') return ctx.reply('👋 Hi! I\'m Gjob!');
+        
+        await ctx.sendChatAction('typing');
+        
+        try {
+            const response = await callAI(text);
+            await ctx.reply(response);
+        } catch (error) {
+            await ctx.reply('Please try again.');
+        }
     }
 });
 
