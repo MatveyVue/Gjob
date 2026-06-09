@@ -3,7 +3,7 @@ const express = require('express');
 
 const app = express();
 
-const BOT_TOKEN = '8291475798:AAHMVeNhqwhQKju8dZnYUP3x7LIAu-kldxs';
+const BOT_TOKEN = '8291475798:AAHMVeNhqwhQKju8dZnYUP3x7LIAu-kld';
 const bot = new Telegraf(BOT_TOKEN);
 
 console.log('🤖 Bot initializing...');
