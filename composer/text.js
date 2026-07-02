@@ -6,13 +6,7 @@ const composer = new Composer();
 
 console.log('🤖 Gjob bot loaded');
 
-// ВАЖНО: ключ лучше хранить в переменной окружения, а не в коде.
-// Запускать бота так: OPENROUTER_API_KEY=sk-or-... node index.js
-const API_KEY = process.env.OPENROUTER_API_KEY;
-
-if (!API_KEY) {
-    console.warn('⚠️  OPENROUTER_API_KEY не задан. Установите переменную окружения.');
-}
+const API_KEY = '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';
 
 const SYSTEM_PROMPT =
     'Твое имя Gjob. Ты AI помощник в Telegram боте. Отвечай кратко. ' +
