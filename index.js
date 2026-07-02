@@ -3,6 +3,7 @@ const express = require('express');
 
 const app = express();
 
+const OPENROUTER_API_KEY = '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';
 const BOT_TOKEN = '8291475798:AAHMVeNhqwhQKju8dZnYUP3x7LIAu-kldxs';
 const bot = new Telegraf(BOT_TOKEN);
 
